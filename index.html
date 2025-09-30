@@ -146,6 +146,32 @@
                 // Відновлюємо матрицю проекції камери після закінчення ініціалізації
                 arToolkitContext.init(function onCompleted() {
                     camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
+                    // --- debug + гарантований режим детекції матричних кодів ---
+if (arToolkitContext.arController) {
+  console.log('arController ready', arToolkitContext.arController);
+
+  // Форсуємо режим, який включає matrix/barcode (якщо доступно)
+  if (typeof artoolkit !== 'undefined' && arToolkitContext.arController.setPatternDetectionMode) {
+    try {
+      arToolkitContext.arController.setPatternDetectionMode(artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX);
+      console.log('pattern detection mode set to TEMPLATE_MATCHING_COLOR_AND_MATRIX');
+    } catch(e){
+      console.warn('Could not set patternDetectionMode, maybe different artoolkit build', e);
+    }
+  }
+
+  // Виведемо список зареєстрованих barcodeMarkers (ключі)
+  console.log('barcodeMarkers keys:', Object.keys(arToolkitContext.arController.barcodeMarkers || {}));
+
+  // Додамо подію getMarker для швидкої діагностики — покаже idMatrix/idPatt коли щось видно
+  arToolkitContext.arController.addEventListener('getMarker', function(ev){
+    if (!ev || !ev.data || !ev.data.marker) return;
+    const m = ev.data.marker;
+    if (m.idMatrix !== -1) console.log('GET MARKER: matrix id =', m.idMatrix, ' pos=', m.pos);
+    if (m.idPatt !== -1)   console.log('GET MARKER: pattern id =', m.idPatt);
+  });
+}
+
                 });
 
                 // Створюємо головну групу для всіх 3D об'єктів
@@ -162,11 +188,11 @@
                 // Масив файлів моделей, якщо немає моделі буде додано порожній рядок
                 const modelFiles = ["" ,"" ,""];
                 // Масив файлів зображень, якщо немає зображення буде додано також порожній рядок
-                const imageFiles = ["me.jpg" ,"бен вуд.jpg" ,"tab.jpg"];
+                const imageFiles = ["me.jpg" ,"бен вуд.jpg" ,"tabulator.jpg"];
                 // Масив файлів відео, якщо немає відео буде ще один порожній рядок
                 const videoFiles = ["" ,"" ,""];
                 // Масив файлів аудіо, якщо немає аудіо буде так само порожній рядок
-                const audioFiles = ["my.mp3" ,"ben.mp3" ,"tab.mp3"];
+                const audioFiles = ["my.mp3" ,"ben.mp3" ,"tabulator.mp3"];
                 // Масив опцій повтору аудіо та відео контенту, по дефолту для всіх буде false
                 const repeatOptions = ["false" ,"false" ,"false"];
   
